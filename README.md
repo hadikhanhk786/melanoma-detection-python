@@ -1,6 +1,6 @@
 **Melanoma detection**
 
-This application reads dermoscopic lesion images and classfies them as melanoma or beingn.
+This application reads dermoscopic lesion images and classfies them as melanoma or benign.
 It is developed using OpenCV 3.1.0 and Python 2.7
 
 Requirments
