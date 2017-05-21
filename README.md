@@ -1,7 +1,7 @@
-**Lipid Tracking**
+**Melanoma detection**
 
-This application reads microscope image and tracks fluorescent lipids
-using OpenCV 3.1 and Python
+This application reads dermoscopic lesion images and classfies them as melanoma or beingn.
+It is developed using OpenCV 3.1.0 and Python 2.7
 
 Requirments
 ===========
@@ -19,20 +19,20 @@ It was tested on Windows and Mac OS X.
 Usage
 =====
 
-Run `python src/lipid_tracking.py`
+Run `python src/mole_project2.py`
 
 Steps involved
 ==============
 
-The code tracks fluorescent lipids by following steps
+The code performs following steps
 
--   Detect all the lipids in every frame
--   Eliminate undocked lipids detected and track only docked frames
--   Handle the lipids burst
--   Handle the background changes caused due to lipids burst
+-   Reads in dermoscopic lesion image and mask image
+-   Segment the lesion from the dermoscopic image using mask
+-   calculate ABCD features of the lesion
+-   classify them using classifier (In progress)
+-   Working on porting active contour c++ code to Python which was used to generate the mask images (In progress)
 
-Here are some of the snapshots
-==============================
+
 
 License
 =======
