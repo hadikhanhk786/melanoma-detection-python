@@ -1,0 +1,39 @@
+#!python
+# Currently compiles a debug version
+# following line gave me an error
+#Import("tool_prefix")
+import distutils.sysconfig, os
+# XXX: these should just set the defaults and let user override them with an Environment var
+boost_prefix=r"C:\boost_1_62_0"
+boost_libdir=boost_prefix + r"\lib64-msvc-14.0"
+opencv_path=r"C:\Users\ukalwa\Downloads\opencv"
+def TOOL_BOOST_DISTUTILS(env):
+    """Add stuff needed to build Python extensions with boost.  """
+    vars = distutils.sysconfig.get_config_vars('CC', 'CXX', 'OPT', 'BASECFLAGS', 'CCSHARED', 'LDSHARED', 'SO')
+    for i in range(len(vars)):
+        if vars[i] is None:
+            vars[i] = ""
+    (cc, cxx, opt, basecflags, ccshared, ldshared, so_ext) = vars
+    #For some reason all but so_ext are zero
+    #print 'cc',cc, 'cxx',cxx, 'opt',opt
+    #print 'basecflags',basecflags, 'ccshared',ccshared,
+    #print 'ldshared',ldshared, 'so_ext',so_ext
+    #print distutils.sysconfig.get_python_inc()
+    env.AppendUnique(CPPPATH=[distutils.sysconfig.get_python_inc(),boost_prefix, \
+    distutils.sysconfig.PREFIX + r'\Lib\site-packages\numpy\core\include',
+    opencv_path + r'\build\include'])
+    env.AppendUnique(CXXFLAGS=Split("/Zm800 -nologo /EHsc /DBOOST_PYTHON_DYNAMIC_LIB /Z7 /Od /Ob0 /EHsc /GR /MD  /wd4675 /Zc:forScope /Zc:wchar_t"))
+    env.Replace(LDMODULEPREFIX='_', SHLIBPREFIX='_')
+    # Use the following for VC6.0
+    #env.AppendUnique(CXXFLAGS=Split("/Zm800 /nologo /DBOOST_PYTHON_DYNAMIC_LIB /Z7 /Od /Ob0 /EHsc /GR /MDd"))
+    OPENCV_EXT="2410"
+    env.AppendUnique(LIBPATH=[boost_libdir, distutils.sysconfig.PREFIX+"/libs", opencv_path + r'\build\x64\vc12\lib'])
+    env.AppendUnique(LIBS=["boost_python-vc140-mt-gd-1_62",'opencv_features2d' + OPENCV_EXT, 'opencv_core' + OPENCV_EXT, \
+    'opencv_highgui' + OPENCV_EXT, 'opencv_imgproc' + OPENCV_EXT])
+    env['SHLIBPREFIX']=""   #gets rid of lib prefix
+    env['SHLIBSUFFIX']=so_ext
+Default('.')
+env=Environment(tools=['default', TOOL_BOOST_DISTUTILS], MSVC_USE_SCRIPT=r'C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat')
+hello = env.SharedLibrary('active_contour', ['conversion.cpp', 'active_contour.cpp', 'linked_list.cpp',
+'activecontour.cpp', 'ac_withoutedges_yuv.cpp'])
+#TODO add install line

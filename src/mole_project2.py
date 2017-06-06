@@ -8,6 +8,7 @@ import cv2
 import numpy as np
 import os
 import json
+from scipy.interpolate import splprep, splev
 #optional argument
 def nothing(x):
     pass
@@ -104,13 +105,54 @@ def get_color_contour(frame, hsv, colors, COLOR):
     else:
         return []
 
+def sq_dist_two_vectors(p, q):
+    return np.square(p[:, 0] - q[:, 0]) + np.square(p[:, 1] - q[:, 1])
+
+
+def smooth_borders(a, smoothing_coefficient):
+    for i in range(smoothing_coefficient):
+        b = np.roll(a, 1, axis=0)
+        c = np.roll(a, -1, axis=0)
+        a = (a + b + c) / 3
+    return a, b, c
+
+
+def menger_curve_array(a, b, c):
+    #    a = a[:-2,:]
+    #    b = b[:-2,:]
+    #    c = c[:-2,:]
+    curvature_top = 2 * (
+    np.multiply(a[:, 0] - b[:, 0], c[:, 1] - b[:, 1]) - np.multiply(
+        c[:, 0] - b[:, 0], a[:, 1] - b[:, 1]))
+    curvature_bottom = np.sqrt(
+        np.multiply(sq_dist_two_vectors(a, b), sq_dist_two_vectors(b, c),
+                    sq_dist_two_vectors(c, a)))
+    with np.errstate(divide='ignore', invalid='ignore'):
+        curvature = np.true_divide(curvature_top, curvature_bottom)
+        curvature[curvature == np.inf] = 0
+        #        curvature = np.concatenate(([0],np.nan_to_num(curvature),[0]))
+        return curvature
+
+def smooth_boundary(boundary):
+    pts = boundary[:, 0, :]
+    tck, u = splprep(pts.T, u=None, s=np.float(len(pts) + 1), per=1, quiet=3)
+    u_new = np.linspace(u.min(), u.max(), len(pts) + 1)
+    new_points = splev(u_new, tck, der=0)
+    #    print np.array([new_points[0][:-1],new_points[1][:-1]]).T.shape
+    smoothened_boundary = np.array([new_points[0][:-1], new_points[1][:-1]]).T
+    # smoothened_boundary,_,_ = smooth_borders(smoothened_boundary,
+    #                                          smoothing_coefficient)
+    # print smoothened_boundary.shape, len(pts),1,2
+    smoothened_boundary_opencv_format = [
+        np.reshape(np.int32(np.around(smoothened_boundary)), [len(pts), 1, 2])]
+    return smoothened_boundary, smoothened_boundary_opencv_format
 
 PATH = r'G:\Upender\Melanoma Project\PH2Dataset\MoleDetection'
 failed_files = []
 target = open(os.path.join(PATH,'results5.txt'), 'w')
 for filename in os.listdir(PATH):
     if "lesion" not in filename and "Label" not in filename \
-    and "IMD009" in filename and "_cropped" in filename \
+    and "IMD002" in filename and "_cropped" in filename \
     and filename.endswith('.jpg'):
         print filename
         base_file, _ = os.path.splitext(filename)
@@ -134,6 +176,13 @@ for filename in os.listdir(PATH):
             max_area_pos = np.argpartition(area, -1)[-1:][0]
             contour_area = cv2.contourArea(mask_contours[max_area_pos])
             feature_set = get_features(mask2,mask_contours[max_area_pos], os.path.join(PATH,base_file))
+#            a = np.reshape(mask_contours[max_area_pos],
+#                           [len(mask_contours[max_area_pos]),2])
+            smoothened_boundary, _ = smooth_boundary(mask_contours[max_area_pos])
+            a = smoothened_boundary
+            b = np.roll(a, 1, axis=0)
+            c = np.roll(a, -1, axis=0)
+            k = menger_curve_array(a, b, c)
         if cnt<=0:
             failed_files.append(filename)
             continue
@@ -199,6 +248,6 @@ for filename in os.listdir(PATH):
         target.write(json.dumps(feature_set)+'\n')
 
 target.close()
-cv2.imshow("Windows",frame_for_viewing)
-cv2.waitKey(10000)
-cv2.destroyAllWindows()
+#cv2.imshow("Windows",frame_for_viewing)
+#cv2.waitKey(10000)
+#cv2.destroyAllWindows()

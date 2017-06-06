@@ -39,11 +39,12 @@
 
 #include <iostream> // for the function display()
 #include "linked_list.hpp"
+#include <limits.h>
 
 namespace ofeli
 {
 
-const int List::sentinel_elem = -2147483648; // min value with a 32 bits architecture
+const int List::sentinel_elem = INT_MIN; // min value with a 32 bits architecture
 
 List::List()
 {

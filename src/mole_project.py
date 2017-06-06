@@ -12,6 +12,7 @@ import os
 def nothing(x):
     pass
 
+
 def onmouse(event,x,y,flags,params):
     global point,hsv
     if event == cv2.EVENT_LBUTTONDOWN:
