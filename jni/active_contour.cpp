@@ -29,7 +29,7 @@ static void init()
 
 
 
-Mat get_active_contour(Mat img, Mat mGr){
+void get_active_contour(Mat img, Mat mGr, int iterations){
 
 	// Mat img = imread("/Images/IMD002_cropped.jpg",1);
 	// Mat mGr = Mat::zeros(img.size(), CV_8UC1);
@@ -67,8 +67,13 @@ Mat get_active_contour(Mat img, Mat mGr){
 
 	// myfile << "n_out \n";
 	// myfile << ac.get_CinY() << ac.get_CinU() << ac.get_CinV();
-	ac.evolve_n_iterations(75);
-
+	if(iterations!=9999){
+		ac.evolve_n_iterations(iterations);
+	}
+	else{
+		ac.evolve_to_final_state();
+	}
+	
 	// myfile << "After iterations \n";
 	// myfile << "CoutRGB \n";
 	// myfile << ac.get_CoutR() << ac.get_CoutG() << ac.get_CoutB();
@@ -113,7 +118,6 @@ Mat get_active_contour(Mat img, Mat mGr){
 
 	// imwrite("/Images/result.png",mGr);
 
-	return mGr;
 }
 
 
@@ -121,13 +125,13 @@ Mat get_active_contour(Mat img, Mat mGr){
  * Converts a grayscale image to a bilevel image.
  */
 PyObject*
-run(PyObject *hsvImg, PyObject *zeroImg)
+run(PyObject *hsvImg, int iterations)
 {
     NDArrayConverter cvt;
     cv::Mat hsv_img { cvt.toMat(hsvImg) };
-	cv::Mat zero_img { cvt.toMat(zeroImg) };
-    Mat result = get_active_contour(hsv_img, zero_img);
-    return cvt.toNDArray(result);
+	cv::Mat zero_img = Mat::zeros(hsv_img.size(), CV_8UC1);
+    get_active_contour(hsv_img, zero_img, iterations);
+    return cvt.toNDArray(zero_img);
 }
 
 
