@@ -65,8 +65,11 @@ if __name__ == "__main__":
         parser = argparse.ArgumentParser()
         parser.add_argument("-d", "--dir", help="directory containing files")
         parser.add_argument("-f", "--file", help="full file path")
+        parser.add_argument("--save", help="save Images")
         args = parser.parse_args()
         print args
+        if args.save:
+            save_files = True
         if args.dir:
             if os.path.isdir(args.dir):
                 main(dir_path=args.dir, process_dir=True)

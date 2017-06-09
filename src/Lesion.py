@@ -46,6 +46,14 @@ class Lesion:
         self.max_area_pos = None
         self.contour_area = None
         self.feature_set = []
+        
+        # Active contour params
+        self.iter_list = [50, 1]
+        self.gaussian_list = [5, 1.0]
+        self.energy_list = [1, 1, 1, 1, 1]
+        self.init_width = 0.85
+        self.init_height = 0.85
+        self.shape = 0 # 0 - ellipse, 1 - rectangle
 
     def check_image(self):
         try:
@@ -55,6 +63,7 @@ class Lesion:
             if self.image.shape[2] != 3:
                 self.isImageValid = False
                 return
+            self.image = cv2.medianBlur(self.image, 5)
             self.hsv_image = cv2.cvtColor(self.image, cv2.COLOR_BGR2HSV)
             self.isImageValid = True
             return True
@@ -70,7 +79,13 @@ class Lesion:
                                       cv2.BORDER_CONSTANT,
                                       value=[255, 255, 255])
             self.contour_mask = np.zeros(img2.shape[:2], dtype=np.uint8)
-            self.contour_binary = active_contour.run(img2, iterations)
+            self.contour_binary = active_contour.run(img2, iterations, 
+                                                        self.shape,
+                                                        self.init_width,
+                                                        self.init_height,
+                                                        self.iter_list,
+                                                        self.energy_list, 
+                                                        self.gaussian_list) 
             im_mask, mask_contours, hierarchy = \
                 cv2.findContours(self.contour_binary, cv2.RETR_TREE,
                                  cv2.CHAIN_APPROX_NONE)
