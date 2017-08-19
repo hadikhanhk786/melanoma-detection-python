@@ -8,7 +8,7 @@ import cv2
 import numpy as np
 
 
-def extract(mask, contour, path):
+def extract(image, mask, contour, path):
     moments = cv2.moments(contour)
     #            contour_area = moments['m00']
     # (mH, mW) = mask.shape[:2]
@@ -44,23 +44,25 @@ def extract(mask, contour, path):
 
         rot[0, 2] += (nW / 2) - cols / 2
         rot[1, 2] += (nH / 2) - rows / 2
-        warp_img = cv2.warpAffine(mask, rot, (nH, nW))
+        warp_mask = cv2.warpAffine(mask, rot, (nH, nW))
+        warp_img = cv2.warpAffine(image, rot, (nH, nW))
+        warp_img_segmented = cv2.bitwise_and(warp_img,warp_img,mask=warp_mask)
 
-        im_mask, cnts, hierarchy = cv2.findContours(warp_img, cv2.RETR_TREE,
+        im_mask, cnts, hierarchy = cv2.findContours(warp_mask, cv2.RETR_TREE,
                                                     cv2.CHAIN_APPROX_NONE)
         areas = [cv2.contourArea(c) for c in cnts]
         contour = cnts[np.argmax(areas)]
         xx, yy, nW, nH = cv2.boundingRect(contour)
-        #        cv2.rectangle(warp_img,(xx,yy),(xx+w,yy+h),(255,255,255),2)
-        warp_img = warp_img[yy:yy + nH, xx:xx + nW]
+        #        cv2.rectangle(warp_mask,(xx,yy),(xx+w,yy+h),(255,255,255),2)
+        warp_mask = warp_mask[yy:yy + nH, xx:xx + nW]
 
         # get horizontal asymmetry
-        flipContourHorizontal = cv2.flip(warp_img, 1)
-        flipContourVertical = cv2.flip(warp_img, 0)
+        flipContourHorizontal = cv2.flip(warp_mask, 1)
+        flipContourVertical = cv2.flip(warp_mask, 0)
 
-        diff_horizontal = cv2.compare(warp_img, flipContourHorizontal,
+        diff_horizontal = cv2.compare(warp_mask, flipContourHorizontal,
                                       cv2.CV_8UC1)
-        diff_vertical = cv2.compare(warp_img, flipContourVertical, cv2.CV_8UC1)
+        diff_vertical = cv2.compare(warp_mask, flipContourVertical, cv2.CV_8UC1)
 
 #        cv2.imwrite(path + '_roi_vertical.PNG', diff_vertical)
 #        cv2.imwrite(path + '_roi_horizontal.PNG', diff_horizontal)
@@ -73,8 +75,11 @@ def extract(mask, contour, path):
 
         return [{'area': int(contour_area), 'centroid': contour_centroid,
                 'perimeter': int(contour_perimeter),
-                'diam': np.int0([nW, nH]).tolist(), 'asym': [h_asym, v_asym]},
+                'B': (contour_perimeter**2)/(4*np.pi*contour_area),
+                'D1': max([nW, nH]), 'D2': min([nW, nH]),
+                'A1': h_asym, 'A2':v_asym},
                 cv2.bitwise_not(diff_horizontal),
-                cv2.bitwise_not(diff_vertical)]
+                cv2.bitwise_not(diff_vertical),
+                warp_img_segmented]
     except:
         return {}

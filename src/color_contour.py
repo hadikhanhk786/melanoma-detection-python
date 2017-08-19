@@ -26,7 +26,10 @@ def extract(frame, hsv, colors, max_area):
                 area[i] = a
 
         if np.max(area) > 0:
-            max_area_pos = np.argpartition(area, -2)[-2:]
+            if len(area) > 1:
+                max_area_pos = np.argpartition(area, -2)[-2:]
+            else:
+                max_area_pos = 0
             #    cv2.drawContours(frame,contours,max_area_pos,(0,255,0),2)
             return np.array(contours)[max_area_pos]
         else:

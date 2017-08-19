@@ -26,6 +26,8 @@ def main(dir_path='', file_path='', process_dir=False):
 
             if len(dir_path) != 0:
                 target = open(posixpath.join(dir_path, "results.json"), 'w')
+                header = []
+                notSetHeader = True
                 for name in os.listdir(dir_path):
                     if not os.path.isdir(
                             name) and "lesion" not in name \
@@ -36,8 +38,19 @@ def main(dir_path='', file_path='', process_dir=False):
                         print "FILE: %s" % filename
                         lesion = Lesion.Lesion(filename)
                         lesion.extract_info(save=save_files)
-                        results.append(lesion.feature_set)
-                        target.write(json.dumps(lesion.feature_set) + "\n")
+                        temp = []
+                        search_str = ["A", "B", "C", "D", "image"]
+                        for key, value in lesion.feature_set.iteritems():
+                            if any(x in key for x in search_str):
+                                temp.append(value)
+                                if notSetHeader:
+                                    header.append(key)
+                        results.append(temp)
+                        #results.append(lesion.feature_set)
+                        if notSetHeader:
+                            target.write(json.dumps(header) + "\n")
+                            notSetHeader = False
+                        target.write(json.dumps(temp) + "\n")
 #                        return_vars = process(filename, failed_files, results)
 #                        if return_vars is not None:
 #                            results.append(return_vars)
@@ -51,6 +64,7 @@ def main(dir_path='', file_path='', process_dir=False):
         if len(file_path) != 0:
             print "FILE: %s" % file_path
             lesion = Lesion.Lesion(file_path)
+            print save_files
             lesion.extract_info(save=save_files)
 #            return_vars = process(file_path, failed_files, results)
         else:
@@ -67,7 +81,7 @@ if __name__ == "__main__":
         parser.add_argument("-f", "--file", help="full file path")
         parser.add_argument("--save", help="save Images")
         args = parser.parse_args()
-        print args
+        # print args
         if args.save:
             save_files = True
         if args.dir:

@@ -23,14 +23,6 @@ def TOOL_BOOST_DISTUTILS(env):
         env.AppendUnique(LIBPATH=[BOOST_LIBDIR, distutils.sysconfig.PREFIX+"/libs", OPENCV_DIR + r'\build\x64\vc12\lib'])
         env.AppendUnique(LIBS=["boost_python-vc140-mt-gd-1_62",'opencv_features2d' + OPENCV_VER, 'opencv_core' + OPENCV_VER, \
         'opencv_highgui' + OPENCV_VER, 'opencv_imgproc' + OPENCV_VER])
-    if platform.system() == "Linux":
-        env.AppendUnique(CPPPATH=[distutils.sysconfig.get_python_inc(),BOOST_ROOT, \
-        distutils.sysconfig.PREFIX + r'\Lib\site-packages\numpy\core\include',
-        OPENCV_DIR + r'\build\include'])
-        env.AppendUnique(CXXFLAGS="-std=c++11")
-        env.AppendUnique(LIBPATH=[BOOST_LIBDIR, distutils.sysconfig.PREFIX+"/libs", OPENCV_DIR + r'\build\x64\vc12\lib'])
-        env.AppendUnique(LIBS=["boost_python",'opencv_features2d', 'opencv_core', \
-        'opencv_highgui', 'opencv_imgproc'])
         
     env['SHLIBPREFIX']=""   #gets rid of lib prefix
     env['SHLIBSUFFIX']=so_ext
@@ -39,10 +31,6 @@ Default('.')
 if platform.system() == "Windows":
     env=Environment(tools=['default', TOOL_BOOST_DISTUTILS], \
     MSVC_USE_SCRIPT=r'C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat')
-if platform.system() == "Linux":
-    env=Environment(tools=['default', TOOL_BOOST_DISTUTILS])
-# hello = env.SharedLibrary('active_contour', ['conversion.cpp', 'active_contour.cpp', 'linked_list.cpp',
-# 'activecontour.cpp', 'ac_withoutedges_yuv.cpp'])
 env.VariantDir('build', 'jni', duplicate=0)
 lib = env.SharedLibrary('active_contour', Glob('build/*.cpp'))
 env.Install("src/", lib)
