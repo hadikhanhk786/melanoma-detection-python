@@ -32,7 +32,7 @@ def main(dir_path='', file_path='', process_dir=False):
                     if not os.path.isdir(
                             name) and "lesion" not in name \
                             and "Label" not in name \
-                            and "_cropped" in name \
+                            and "cropped" in name \
                             and name.endswith('.jpg'):
                         filename = posixpath.join(dir_path, name)
                         print "FILE: %s" % filename
@@ -64,7 +64,6 @@ def main(dir_path='', file_path='', process_dir=False):
         if len(file_path) != 0:
             print "FILE: %s" % file_path
             lesion = Lesion.Lesion(file_path)
-            print save_files
             lesion.extract_info(save=save_files)
 #            return_vars = process(file_path, failed_files, results)
         else:
