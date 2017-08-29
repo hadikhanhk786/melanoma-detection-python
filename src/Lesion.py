@@ -6,13 +6,12 @@ import cv2
 import numpy as np
 
 import features
-from utilities import draw_closing_lines, extract_largest_contour
+from utilities import extract_largest_contour
 import color_contour
 import active_contour
 
 class Lesion:
     def __init__(self, file_path):
-        self.time_stamps = []
         self.file_path = file_path
         self.base_file, _ = os.path.splitext(file_path)
         self.original_image = cv2.imread(file_path)
@@ -56,6 +55,7 @@ class Lesion:
         self.max_area_pos = None
         self.contour_area = None
         self.feature_set = []
+        self.performance_metric = []
 
         # Active contour params
         self.iter_list = [75, 25]
@@ -83,68 +83,53 @@ class Lesion:
             self.isImageValid = False
             return
 
-    def get_mask(self, iterations=9999, color=(255,0,0)):
+    def segment(self, iterations=9999, color=(255,0,0)):
+        # Active contour segmentation time
         if self.isImageValid:
-#            img2 = cv2.copyMakeBorder(self.image, self.borders,
-#                                      self.borders, self.borders,
-#                                      self.borders,
-#                                      cv2.BORDER_CONSTANT,
-#                                      value=[255, 255, 255])
-#            self.contour_mask = np.zeros(img2.shape[:2], dtype=np.uint8)
-            self.contour_mask = np.zeros(self.image.shape[:2], dtype=np.uint8)
-            self.contour_binary = active_contour.run(self.image, iterations,
-                                                        self.shape,
-                                                        self.init_width,
-                                                        self.init_height,
-                                                        self.iter_list,
-                                                        self.energy_list,
-                                                        self.gaussian_list)
-            ret_val = extract_largest_contour(self.contour_binary)
+            self.contour_mask = active_contour.run(self.image,
+                                                   iterations,
+                                                   self.shape,
+                                                   self.init_width,
+                                                   self.init_height,
+                                                   self.iter_list,
+                                                   self.energy_list,
+                                                   self.gaussian_list)
+            ret_val = extract_largest_contour(self.contour_mask)
             if len(ret_val) == 0:
+                print "error"
                 return
             else:
                 mask_contours = ret_val[0]
-                max_area_pos = ret_val[1]
-                # Bug fix to handle breaks in contours
-                draw_closing_lines(self.contour_binary,
-                                   mask_contours)
-                ret_val = extract_largest_contour(self.contour_binary)
-                mask_contours = ret_val[0]
-                max_area_pos = ret_val[1]
-                cv2.drawContours(self.contour_mask, mask_contours,
-                                 max_area_pos,
-                                 (255, 255, 255),
-                                 -1)
-
-#            self.contour_mask = self.contour_mask[self.borders:-self.borders,
-#                                                  self.borders:-self.borders]
-            im_mask, mask_contours, hierarchy = \
-                cv2.findContours(self.contour_mask, cv2.RETR_TREE,
-                                 cv2.CHAIN_APPROX_NONE)
-            cnt = len(mask_contours)
-            if cnt > 0:
-                area = np.zeros(cnt)
-                for i in np.arange(cnt):
-                    area[i] = cv2.contourArea(mask_contours[i])
-                self.max_area_pos = np.argpartition(area, -1)[-1:][0]
+                self.max_area_pos = ret_val[1]
                 self.contour = mask_contours[self.max_area_pos]
-                cv2.drawContours(self.contour_image, mask_contours,
-                                 self.max_area_pos,
-                                 color,
-                                 2)
-                return True
-            if cnt <= 0:
-                return
+                cnt = len(mask_contours)
+                if cnt > 0:
+                    cv2.drawContours(self.contour_image, mask_contours,
+                                     self.max_area_pos,
+                                     color,
+                                     2)
+                    self.contour_binary = np.zeros(self.image.shape[:2],
+                                                   dtype=np.uint8)
+                    cv2.drawContours(self.contour_binary, mask_contours,
+                                     self.max_area_pos,
+                                     255,
+                                     2)
+                    self.contour_area = cv2.contourArea(self.contour)
+                    self.segmented_img = cv2.bitwise_and(
+                            self.original_image,self.original_image,
+                            mask=self.contour_mask)
+                else:
+                    print "No contours found"
+        return
 
-    def segment(self):
+
+    def loop_through_iterations(self):
         for lst in self.iter_colors:
-            ret = self.get_mask(lst[0],lst[1])
-        if ret is not None:
-            self.contour_area = cv2.contourArea(
-                self.contour)
-            self.segmented_img = cv2.bitwise_and(self.original_image,
-                                                 self.original_image,
-                                                 mask=self.contour_mask)
+            start = time()
+            self.segment(lst[0],lst[1])
+            end = time()
+            self.performance_metric.append(end-start)
+
 
     def extract_features(self):
             returnVars = features.extract(self.image, self.contour_mask,
@@ -225,17 +210,25 @@ class Lesion:
         target.close()
 
     def extract_info(self,save=False):
+        # Preprocessing time
         start = time()
         if self.check_image():
             end = time()
-            self.time_stamps.append(end-start)
-            self.segment()
+            self.performance_metric.append(end-start)
+            self.loop_through_iterations()
+            # A,B,D feature extraction time
             start = time()
-            self.time_stamps.append(start-end)
             self.extract_features()
+            end = time()
+            self.performance_metric.append(end-start)
+            # color feature extraction time
+            start = time()
             self.get_color_contours()
             end = time()
-            self.time_stamps.append(end-start)
+            self.performance_metric.append(end-start)
+            # Total feature extraction time
+            self.performance_metric.append(self.performance_metric[-1]+
+                                           self.performance_metric[-2])
             if save and len(self.feature_set) != 0:
                 self.save_images()
                 self.save_result()

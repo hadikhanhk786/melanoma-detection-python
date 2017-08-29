@@ -10,12 +10,15 @@ import os
 import posixpath
 import json
 
+import numpy as np
+
 import Lesion
 
 
 results = []
 failed_files = []
 save_files = False
+performance_metrics = []
 
 def main(dir_path='', file_path='', process_dir=False):
     global failed_files, results, save_files
@@ -46,15 +49,19 @@ def main(dir_path='', file_path='', process_dir=False):
                                 if notSetHeader:
                                     header.append(key)
                         results.append(temp)
-                        #results.append(lesion.feature_set)
                         if notSetHeader:
                             target.write(json.dumps(header) + "\n")
                             notSetHeader = False
                         target.write(json.dumps(temp) + "\n")
-#                        return_vars = process(filename, failed_files, results)
-#                        if return_vars is not None:
-#                            results.append(return_vars)
+
+                        # Record execution times of different steps
+                        performance_metrics.append(lesion.performance_metric)
+
                 target.close()
+                # Save the metrics as csv file
+                np.savetxt(posixpath.join(dir_path, "metrics.csv"),
+                           np.array(performance_metrics)*1000,
+                           delimiter=',')
             else:
                 print "Invalid directory"
     else:
@@ -65,7 +72,6 @@ def main(dir_path='', file_path='', process_dir=False):
             print "FILE: %s" % file_path
             lesion = Lesion.Lesion(file_path)
             lesion.extract_info(save=save_files)
-#            return_vars = process(file_path, failed_files, results)
         else:
             print "Invalid file"
 

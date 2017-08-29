@@ -18,9 +18,9 @@ def TOOL_BOOST_DISTUTILS(env):
     if platform.system() == "Windows":
         env.AppendUnique(CPPPATH=[distutils.sysconfig.get_python_inc(),BOOST_ROOT, \
         distutils.sysconfig.PREFIX + r'\Lib\site-packages\numpy\core\include',
-        OPENCV_DIR + r'\build\include'])
+        OPENCV_DIR + r'\..\..\include'])
         env.AppendUnique(CXXFLAGS=Split("/Zm800 -nologo /EHsc /DBOOST_PYTHON_DYNAMIC_LIB /Z7 /Od /Ob0 /EHsc /GR /MD  /wd4675 /Zc:forScope /Zc:wchar_t"))
-        env.AppendUnique(LIBPATH=[BOOST_LIBDIR, distutils.sysconfig.PREFIX+"/libs", OPENCV_DIR + r'\build\x64\vc12\lib'])
+        env.AppendUnique(LIBPATH=[BOOST_LIBDIR, distutils.sysconfig.PREFIX+"/libs", OPENCV_DIR + r'\lib'])
         env.AppendUnique(LIBS=["boost_python-vc140-mt-gd-1_62",'opencv_features2d' + OPENCV_VER, 'opencv_core' + OPENCV_VER, \
         'opencv_highgui' + OPENCV_VER, 'opencv_imgproc' + OPENCV_VER])
         
