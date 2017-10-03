@@ -7,3 +7,5 @@
 build/
 *.pyd
 Images/
+*.xml
+.DS_Store

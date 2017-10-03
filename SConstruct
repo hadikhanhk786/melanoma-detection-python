@@ -6,7 +6,7 @@ if platform.system() == "Windows":
     BOOST_ROOT=os.environ.get('BOOST_ROOT') # 64-bit binaries (boost_1.62.0) downloaded from https://boost.teeks99.com
     BOOST_LIBDIR=BOOST_ROOT + r"\lib64-msvc-14.0"
     # Make sure both python and boost binaries are either x64 or x86 and accordingly update path to opencv binaries
-    OPENCV_DIR=os.environ.get('OPENCV_PATH')
+    OPENCV_DIR=os.environ.get('OPENCV2410')
     OPENCV_VER="2410"
 def TOOL_BOOST_DISTUTILS(env):
     """Add stuff needed to build Python extensions with boost.  """
@@ -23,10 +23,10 @@ def TOOL_BOOST_DISTUTILS(env):
         env.AppendUnique(LIBPATH=[BOOST_LIBDIR, distutils.sysconfig.PREFIX+"/libs", OPENCV_DIR + r'\lib'])
         env.AppendUnique(LIBS=["boost_python-vc140-mt-gd-1_62",'opencv_features2d' + OPENCV_VER, 'opencv_core' + OPENCV_VER, \
         'opencv_highgui' + OPENCV_VER, 'opencv_imgproc' + OPENCV_VER])
-        
+
     env['SHLIBPREFIX']=""   #gets rid of lib prefix
     env['SHLIBSUFFIX']=so_ext
-    
+
 Default('.')
 if platform.system() == "Windows":
     env=Environment(tools=['default', TOOL_BOOST_DISTUTILS], \

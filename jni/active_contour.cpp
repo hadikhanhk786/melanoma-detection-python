@@ -38,9 +38,9 @@ int max_area_pos;
 int rows,cols;
 size_t cnt;
 
-vector<vector<Point> > contours;
-vector<Vec4i> hierarchy;
-vector<Point> break_points;
+std::vector<std::vector<Point> > contours;
+std::vector<Vec4i> hierarchy;
+std::vector<Point> break_points;
 
 // Initialize boost python modules
 static void init()
@@ -222,7 +222,7 @@ void stitch_contour_breaks(Mat contour_image) {
     Point pt3 = Point(0,0); // Initialize pt3 incase breaks happen on different axes
     int temp_idx;
     // Paired point indexes are stored to avoid each point from forming additional pairs
-    vector<int> idx_array;
+    std::vector<int> idx_array;
     bool flag_x;
     int min_dist_pos=0;
     double min_dist, dist;
@@ -299,18 +299,18 @@ void stitch_contour_breaks(Mat contour_image) {
  * Converts a grayscale image to a bilevel image.
  */
 PyObject*
-run(PyObject *img, int iterations, int init_contour, double init_width_python, 
+run(PyObject *img, int iterations, int init_contour, double init_width_python,
 	double init_height_python,  py::list& iter_list, py::list& energy_list,
 	py::list& gaussian_list)
 {
 	// Emtpy contents in the arrays
 	break_points = {};
 	// Numpy ndarray converter to convert numpy arrays to cv::Mat arrays
-    NDArrayConverter cvt; 
-	
+    NDArrayConverter cvt;
+
 	//convert numpy array image to cv::Mat image
-    Mat image { cvt.toMat(img) }; 
-	
+    Mat image { cvt.toMat(img) };
+
 	// Create zero images to draw contour and mask
 	Mat mGr = Mat::zeros(image.size(), CV_8UC1);
 	Mat mask_image = Mat(image.size(), CV_8UC1);
@@ -318,29 +318,29 @@ run(PyObject *img, int iterations, int init_contour, double init_width_python,
 	// store cols and rows of the image
 	cols = image.cols;
 	rows = image.rows;
-	
+
 	// retrieve init params sent from python
 	init_height = init_height_python;
 	init_width = init_width_python;
-	
+
 	// retrieve lists sent from python and load it into c++ arrays
 	for (int i=0;i<len(gaussian_list);i++){
 		gaussian_params[i] = py::extract<double>(gaussian_list[i]);
 	}
 	std::cout << "Gaussian passed : " << gaussian_params[0] << "," << gaussian_params[1] << std::endl;
-	
+
 	for (int i=0;i<len(iter_list);i++){
 		iter[i] = py::extract<int>(iter_list[i]);
 	}
 	std::cout << "Iterations passed : " << iter[0] << "," << iter[1] << std::endl;
-	
+
 	std::cout << "Energy params passed : ";
 	for (int i=0;i<len(energy_list);i++){
 		energy_params[i] = py::extract<int>(energy_list[i]);
 		std::cout << energy_params[i] << ",";
 	}
 	std::cout << std::endl;
-	
+
 	// call active contour function with the params
     get_active_contour(image, mGr, iterations, init_contour);
     non_zero_before = countNonZero(mGr); // non zero pixel count in contour image

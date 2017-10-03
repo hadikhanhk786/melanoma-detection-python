@@ -75,9 +75,10 @@ def extract(image, mask, contour, path):
 
         return [{'area': int(contour_area), 'centroid': contour_centroid,
                 'perimeter': int(contour_perimeter),
-                'B': (contour_perimeter**2)/(4*np.pi*contour_area),
-                'D1': max([nW, nH]), 'D2': min([nW, nH]),
-                'A1': h_asym, 'A2':v_asym},
+                'B': round((contour_perimeter**2)/(4*np.pi*contour_area),2),
+                'D1': max([nW, nH]), 'D2': min([nW, nH]), # Normalize params
+                'A1': round(float(h_asym)/contour_area,2),
+                'A2':round(float(v_asym)/contour_area,2)},
                 cv2.bitwise_not(diff_horizontal),
                 cv2.bitwise_not(diff_vertical),
                 warp_img_segmented]

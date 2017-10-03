@@ -19,14 +19,6 @@ DIR = r"G:\Upender\result_set"
 comparison_results = []
 failed_results = []
 
-# main
-
-segmentation_results_dir = join(DIR,"Segmentation_results")
-if not os.path.isdir(segmentation_results_dir):
-    os.mkdir(segmentation_results_dir)
-else:
-    print "Directory exists"
-
 # loop through all the lesion masks
 for manual_seg_mask_name in os.listdir(DIR):
     if "_lesion" in manual_seg_mask_name \
@@ -60,7 +52,7 @@ for manual_seg_mask_name in os.listdir(DIR):
         min_area = min(ftc_mask_area,lesion_mask_area)
 
         # Calculate error_percentage
-        error_percentage = ((max_area-min_area)/lesion_mask_area)*100
+        error_percentage = ((max_area-min_area)/max_area)*100
 
         if error_percentage > 100:
             failed_results.append([base_name, lesion_mask_area, ftc_mask_area,

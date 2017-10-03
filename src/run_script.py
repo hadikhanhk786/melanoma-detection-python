@@ -5,9 +5,9 @@ Created on Wed Jun 07 10:54:17 2017
 @author: ukalwa
 """
 import sys, argparse
+from Tkinter import Tk
 import tkFileDialog as filedialog
 import os
-import posixpath
 import json
 
 import numpy as np
@@ -19,35 +19,35 @@ results = []
 failed_files = []
 save_files = False
 performance_metrics = []
+iterations = 3
+Tk().withdraw()
 
 def main(dir_path='', file_path='', process_dir=False):
-    global failed_files, results, save_files
+    global failed_files, results, save_files, iterations
     if process_dir:
             if len(dir_path) == 0:
                 dir_path = filedialog.askdirectory(
-                        initialdir=r'G:\Upender\Melanoma Project\PH2Dataset')
+                        initialdir=r'G:\Upender\complete_mednode_dataset')
 
             if len(dir_path) != 0:
-                target = open(posixpath.join(dir_path, "results.json"), 'w')
+                target = open(os.path.join(dir_path, "results.json"), 'w')
                 header = []
                 notSetHeader = True
                 for name in os.listdir(dir_path):
                     if not os.path.isdir(
                             name) and "lesion" not in name \
                             and "Label" not in name \
-                            and "cropped" in name \
                             and name.endswith('.jpg'):
-                        filename = posixpath.join(dir_path, name)
+                        filename = os.path.join(dir_path, name)
                         print "FILE: %s" % filename
-                        lesion = Lesion.Lesion(filename)
+                        lesion = Lesion.Lesion(filename,iterations=iterations)
                         lesion.extract_info(save=save_files)
                         temp = []
-                        search_str = ["A", "B", "C", "D", "image"]
+#                        search_str = ["A", "B", "C", "D", "image"]
                         for key, value in lesion.feature_set.iteritems():
-                            if any(x in key for x in search_str):
-                                temp.append(value)
-                                if notSetHeader:
-                                    header.append(key)
+                            temp.append(value)
+                            if notSetHeader:
+                                header.append(key)
                         results.append(temp)
                         if notSetHeader:
                             target.write(json.dumps(header) + "\n")
@@ -59,7 +59,7 @@ def main(dir_path='', file_path='', process_dir=False):
 
                 target.close()
                 # Save the metrics as csv file
-                np.savetxt(posixpath.join(dir_path, "metrics.csv"),
+                np.savetxt(os.path.join(dir_path, "metrics.csv"),
                            np.array(performance_metrics)*1000,
                            delimiter=',')
             else:
@@ -85,10 +85,14 @@ if __name__ == "__main__":
         parser.add_argument("-d", "--dir", help="directory containing files")
         parser.add_argument("-f", "--file", help="full file path")
         parser.add_argument("--save", help="save Images")
+        parser.add_argument("-i", "--iterations", help="Iterations(0--3)")
         args = parser.parse_args()
         # print args
         if args.save:
             save_files = True
+        if args.iterations:
+            print "iterations:", args.iterations
+            iterations = args.iterations
         if args.dir:
             if os.path.isdir(args.dir):
                 main(dir_path=args.dir, process_dir=True)

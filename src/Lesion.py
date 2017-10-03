@@ -11,7 +11,7 @@ import color_contour
 import active_contour
 
 class Lesion:
-    def __init__(self, file_path):
+    def __init__(self, file_path,iterations=3):
         self.file_path = file_path
         self.base_file, _ = os.path.splitext(file_path)
         self.original_image = cv2.imread(file_path)
@@ -27,6 +27,10 @@ class Lesion:
         self.asymmetry_horizontal = None
         self.results = None
         self.value_threshold = 150
+        self.iterations = int(iterations)
+
+        # dataset related params (PH2)
+        self.real_diamter_pixels_mm = 72
         self.hsv_colors = {
             'Blue Gray': [np.array([15, 0, 0]),
                           np.array([179, 255, self.value_threshold]),
@@ -78,6 +82,13 @@ class Lesion:
 
             self.contour_image = np.copy(self.original_image)
             self.isImageValid = True
+            # Mednode dataset related params
+            if "mednode" in self.file_path:
+                self.real_diamter_pixels_mm = (104*7360)/(330*24) # pixels/mm
+            if self.iterations in range(3):
+                temp = self.iter_colors[self.iterations]
+                self.iter_colors.remove(self.iter_colors[self.iterations])
+                self.iter_colors.append(temp)
             return True
         except:
             self.isImageValid = False
@@ -126,6 +137,7 @@ class Lesion:
     def loop_through_iterations(self):
         for lst in self.iter_colors:
             start = time()
+            print lst
             self.segment(lst[0],lst[1])
             end = time()
             self.performance_metric.append(end-start)
@@ -178,7 +190,8 @@ class Lesion:
                             1]) ** 2) ** 0.5
                 color_attr['color'] = color
                 color_attr['centroids'] = centroid
-                self.feature_set['A_' + self.hsv_colors[color][3]] = int(dist)
+                self.feature_set['A_' + self.hsv_colors[color][3]] = \
+                                round(dist/self.feature_set['D1'],4)
                 no_of_colors.append(color_attr)
             else:
                 self.feature_set['A_' + self.hsv_colors[color][3]] = 0
@@ -226,6 +239,12 @@ class Lesion:
             self.get_color_contours()
             end = time()
             self.performance_metric.append(end-start)
+            self.feature_set['D1'] = \
+                    int(round(float(self.feature_set['D1'])\
+                              /self.real_diamter_pixels_mm))
+            self.feature_set['D2'] = \
+                    int(round(float(self.feature_set['D2'])\
+                              /self.real_diamter_pixels_mm))
             # Total feature extraction time
             self.performance_metric.append(self.performance_metric[-1]+
                                            self.performance_metric[-2])
