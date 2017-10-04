@@ -60,6 +60,9 @@ class Lesion:
         self.contour_area = None
         self.feature_set = []
         self.performance_metric = []
+        self.xmlfile = "G:\\Upender\\Python_Projects\\melanoma_project_python\\src\\opencv_svm.xml"
+        self.cols = ['A1','A2', 'B', 'C', 'A_B', 'A_BG', 'A_DB', 'A_LB', 'A_W',
+                'D1', 'D2']
 
         # Active contour params
         self.iter_list = [75, 25]
@@ -77,7 +80,20 @@ class Lesion:
             if self.original_image.shape[2] != 3:
                 self.isImageValid = False
                 return
-            self.image = cv2.medianBlur(self.original_image, 9)
+            # Median blur image
+#            self.image = cv2.medianBlur(self.original_image, 9)
+            # morphologica closing
+            self.image = self.original_image.copy()
+            # Applying CLAHE to resolve uneven illumination
+            hsv = cv2.cvtColor(self.image,cv2.COLOR_BGR2HSV)
+            clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8,8))
+            hsv[:,:,2] = clahe.apply(hsv[:,:,2])
+            self.image = cv2.cvtColor(hsv,cv2.COLOR_HSV2BGR)
+            kernel = np.ones((11,11),np.uint8)
+            for i in range(self.image.shape[-1]):
+                self.image[:,:,i] = cv2.morphologyEx(
+                        self.image[:,:,i],
+                        cv2.MORPH_CLOSE, kernel)
             self.hsv_image = cv2.cvtColor(self.image, cv2.COLOR_BGR2HSV)
 
             self.contour_image = np.copy(self.original_image)
@@ -91,6 +107,7 @@ class Lesion:
                 self.iter_colors.append(temp)
             return True
         except:
+            print "error"
             self.isImageValid = False
             return
 
@@ -144,7 +161,8 @@ class Lesion:
 
 
     def extract_features(self):
-            returnVars = features.extract(self.image, self.contour_mask,
+            returnVars = features.extract(self.original_image,
+                                          self.contour_mask,
                                           self.contour, self.base_file)
             if len(returnVars) == 0:
                 self.feature_set = returnVars
@@ -199,6 +217,17 @@ class Lesion:
         self.feature_set['colors_attr'] = no_of_colors
         self.feature_set['C'] = len(no_of_colors)
 
+    def classify_lesion(self):
+        svm = cv2.ml.SVM_load(self.xmlfile)
+        feature_vector = np.array([self.feature_set[col] for col in self.cols],
+                                  dtype=np.float32)
+        print "feature vector ", feature_vector
+        res = svm.predict(feature_vector.reshape(-1,len(feature_vector)))
+        if res[1] > 0:
+            print "RESULT: Suspicious of Melanoma"
+        else:
+            print "RESULT: Benign"
+
     def save_images(self):
         cv2.imwrite(self.base_file + '.PNG', self.contour_image)
         cv2.imwrite(self.base_file + '_active_contour.PNG',
@@ -248,6 +277,7 @@ class Lesion:
             # Total feature extraction time
             self.performance_metric.append(self.performance_metric[-1]+
                                            self.performance_metric[-2])
+            self.classify_lesion()
             if save and len(self.feature_set) != 0:
                 self.save_images()
                 self.save_result()

@@ -18,19 +18,36 @@ import cv2
 #DIR = r'G:\Upender\result_set'
 #path = os.path.join(DIR,iterations+"_iterations")
 
-iterations = "1"
-path = r'G:\Upender\complete_mednode_dataset'
-benign_stats_file = os.path.join(path,"benign","results.json")
-melanoma_stats_file = os.path.join(path,"melanoma","results.json")
-cols = ['A1','A2', 'B', 'C', 'A_B', 'A_BG', 'A_DB', 'A_LB', 'A_W',
-        'D1', 'D2', 'result']
-## PH2 dataset (From moleanalyzer software)
-#real_diameter = 72 # pixels/mm
-#if "mednode" in path:
-#    # Med-Node dataset
-#    # 2.8/105 mm lens 12 MP and 330mm distance from object
-#    real_diameter = (104*7360)/(330*24) # pixels/mm
+#iterations = "1"
+#path = r'G:\Upender\complete_mednode_dataset'
+paths = [r'G:\Upender\complete_mednode_dataset',
+         r'G:\Upender\result_set\400_iterations']
+benign_df = pd.DataFrame()
+melanoma_df = pd.DataFrame()
+for PATH in paths:
+    benign_stats_file = os.path.join(PATH,"benign","results.json")
+    melanoma_stats_file = os.path.join(PATH,"melanoma","results.json")
+    cols = ['A1','A2', 'B', 'C', 'A_B', 'A_BG', 'A_DB', 'A_LB', 'A_W',
+            'D1', 'D2', 'result']
 
+    # Add class 0 for benign
+    lines = [json.loads(line.strip())+[0] for line in open(benign_stats_file,
+             'r')]
+    benign_headers = lines.pop(0)[:-1]+[u"result"]
+
+    df = pd.DataFrame(lines, columns=benign_headers)
+    benign_df = pd.concat([df, benign_df],axis=0).reset_index()
+    benign_df = benign_df.loc[:,benign_headers]
+
+    # Add class 1 for melanoma
+    lines = [json.loads(line.strip())+[1] for line in open(melanoma_stats_file,
+             'r')]
+    melanoma_headers = lines.pop(0)[:-1]+[u"result"]
+    df = pd.DataFrame(lines, columns=melanoma_headers)
+    melanoma_df = pd.concat([df, melanoma_df],axis=0).reset_index()
+    melanoma_df = melanoma_df.loc[:,melanoma_headers]
+
+total_df = pd.concat([benign_df, melanoma_df], axis=0).reset_index()
 
 def calculate_roc_params(clf, benign_df, melanoma_df):
     global cols
@@ -68,36 +85,6 @@ def calculate_roc_params(clf, benign_df, melanoma_df):
     return {'TPR':TPR, 'FPR':FPR, 'Acc':Accuracy, 'PPV':PPV}
 
 
-lines = [json.loads(line.strip())+[0] for line in open(benign_stats_file, 'r')]
-benign_headers = lines.pop(0)[:-1]+[u"result"]
-
-benign_df = pd.DataFrame(lines, columns=benign_headers)
-#benign_df[['A1','A2']] = benign_df[['A1','A2']].divide(benign_df['area'],
-#                               axis='index')
-#benign_df[['A_B', 'A_BG', 'A_DB', 'A_LB', 'A_W']] = \
-#                        benign_df[['A_B', 'A_BG',
-#                                   'A_DB', 'A_LB', 'A_W']].divide(
-#                        benign_df['D1'],
-#                               axis='index')
-#benign_df[['D1','D2']] = (benign_df[['D1','D2']]/real_diameter).astype('int')
-
-# Add class 2 for melanoma
-lines = [json.loads(line.strip())+[1] for line in open(melanoma_stats_file,
-         'r')]
-melanoma_headers = lines.pop(0)[:-1]+[u"result"]
-melanoma_df = pd.DataFrame(lines, columns=melanoma_headers)
-#melanoma_df[['A1','A2']] = melanoma_df[['A1','A2']].divide(melanoma_df['area'],
-#                               axis='index')
-#melanoma_df[['A_B', 'A_BG', 'A_DB', 'A_LB', 'A_W']] = \
-#                        melanoma_df[['A_B', 'A_BG',
-#                                   'A_DB', 'A_LB', 'A_W']].divide(
-#                        melanoma_df['D1'],
-#                               axis='index')
-#melanoma_df[['D1','D2']] = (melanoma_df[['D1','D2']]/real_diameter).astype('int')
-
-total_df = pd.concat([benign_df, melanoma_df], axis=0).reset_index()
-
-
 def train_and_test(percent, total_df, benign_df, melanoma_df,svm):
     global cols, train_data, test_data
 
@@ -121,9 +108,6 @@ def train_and_test(percent, total_df, benign_df, melanoma_df,svm):
                                          benign_cutoff:,:]])
     svm.train(np.float32(train_data[:,:-1]), cv2.ml.ROW_SAMPLE,
               np.int32(train_data[:,-1]))
-#    # Save datasets
-#    np.savetxt("test_data2.csv",test_data, delimiter=",", fmt='%1.4f')
-#    np.savetxt("train_data2.csv",train_data, delimiter=",", fmt='%1.4f')
     svm.predict(np.float32(test_data[:,:-1]))[1]
 
 
@@ -131,7 +115,7 @@ def train_and_test(percent, total_df, benign_df, melanoma_df,svm):
 
 # 25% training dataset and 75% testing dataset
 if __name__ == "__main__":
-    kernel = [cv2.ml.SVM_LINEAR, cv2.ml.SVM_RBF, cv2.ml.SVM_POLY]
+    kernel = [cv2.ml.SVM_RBF]
     # lst = [0.1, 0.15, 0.2, 0.25]
     for param in kernel:
         train_data = np.array([])
@@ -154,13 +138,13 @@ if __name__ == "__main__":
             svm.setP(0.0)
             train_and_test(25, total_df, benign_df, melanoma_df, svm)
             new_result = calculate_roc_params(svm, benign_df, melanoma_df)
-            if (0.65 <= new_result['TPR'] <= 1 \
-                    and  0 <= new_result['FPR'] <= 0.35):
+            if (0.7 <= new_result['TPR'] <= 1 \
+                    and  0 <= new_result['FPR'] <= 0.3):
 #                print "TEST:TPR %s, FPR %s, Acc %s, PPV %s" % (
 #                        new_result['TPR']*100,new_result['FPR']*100,
 #                        new_result['Acc']*100, new_result['PPV']*100)
-                if new_result['Acc'] > result['Acc']  \
-                        and new_result['TPR'] > result['TPR']:
+                if new_result['TPR'] > result['TPR'] \
+                             and new_result['FPR'] < result['FPR']:
                     result = new_result
                     svm.save("opencv_svm.xml")
                     print "Saved"
