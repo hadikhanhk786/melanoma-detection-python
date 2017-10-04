@@ -17,22 +17,13 @@ def extract(frame, hsv, colors, max_area):
     im2, contours, hierarchy = cv2.findContours(res, cv2.RETR_TREE,
                                                 cv2.CHAIN_APPROX_NONE)
     cnt = len(contours)
-    #    print cnt, COLOR
     if cnt > 0:
-        area = np.zeros(cnt)
+        new_contours = []
         for i in np.arange(cnt):
             a = cv2.contourArea(contours[i])
             if a > max_area * 0.02:
-                area[i] = a
+                new_contours.append(contours[i])
 
-        if np.max(area) > 0:
-            if len(area) > 1:
-                max_area_pos = np.argpartition(area, -2)[-2:]
-            else:
-                max_area_pos = 0
-            #    cv2.drawContours(frame,contours,max_area_pos,(0,255,0),2)
-            return np.array(contours)[max_area_pos]
-        else:
-            return []
+        return np.array(new_contours)
     else:
         return []

@@ -74,9 +74,9 @@ if __name__ == "__main__":
             dir_path = os.path.join(path,dirname)
 #            print dir_path
             benign_stats_file = os.path.join(dir_path,"benign",
-                                             "results2.json")
+                                             "results.json")
             melanoma_stats_file = os.path.join(dir_path,"melanoma",
-                                               "results2.json")
+                                               "results.json")
             lines = [json.loads(line.strip())+[0] for line in \
                      open(benign_stats_file, 'r')]
             benign_headers = lines.pop(0)[:-1]+[u"result"]

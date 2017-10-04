@@ -12,7 +12,6 @@ def extract(image, mask, contour, path):
     moments = cv2.moments(contour)
     #            contour_area = moments['m00']
     # (mH, mW) = mask.shape[:2]
-
     contour_area = cv2.countNonZero(mask)
     try:
         contour_centroid = [int(moments['m10'] / moments['m00']),
@@ -20,14 +19,10 @@ def extract(image, mask, contour, path):
         contour_perimeter = cv2.arcLength(contour, True)
 
         # Get max and min diameter
-        # xx, yy, w, h = np.int0(cv2.boundingRect(contour))
-        #        cv2.rectangle(mask,(xx,yy),(xx+w,yy+h),(255,255,255),2)
         rect = cv2.fitEllipse(contour)
         (x, y) = rect[0]
         (w, h) = rect[1]
         angle = rect[2]
-        #        box = np.int0(cv2.boxPoints(rect))
-        #        cv2.drawContours(mask,[box],0,(255,255,255,2))
 
         if w < h:
             if angle < 90:
@@ -38,12 +33,12 @@ def extract(image, mask, contour, path):
         rot = cv2.getRotationMatrix2D((x, y), angle, 1)
         cos = np.abs(rot[0, 0])
         sin = np.abs(rot[0, 1])
-        #        print(rot)
         nW = int((rows * sin) + (cols * cos))
         nH = int((rows * cos) + (cols * sin))
 
         rot[0, 2] += (nW / 2) - cols / 2
         rot[1, 2] += (nH / 2) - rows / 2
+
         warp_mask = cv2.warpAffine(mask, rot, (nH, nW))
         warp_img = cv2.warpAffine(image, rot, (nH, nW))
         warp_img_segmented = cv2.bitwise_and(warp_img,warp_img,mask=warp_mask)
@@ -64,8 +59,6 @@ def extract(image, mask, contour, path):
                                       cv2.CV_8UC1)
         diff_vertical = cv2.compare(warp_mask, flipContourVertical, cv2.CV_8UC1)
 
-#        cv2.imwrite(path + '_roi_vertical.PNG', diff_vertical)
-#        cv2.imwrite(path + '_roi_horizontal.PNG', diff_horizontal)
 
         diff_horizontal = cv2.bitwise_not(diff_horizontal)
         diff_vertical = cv2.bitwise_not(diff_vertical)

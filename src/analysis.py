@@ -162,7 +162,7 @@ if __name__ == "__main__":
                 if new_result['Acc'] > result['Acc']  \
                         and new_result['TPR'] > result['TPR']:
                     result = new_result
-                    svm.save("ph2_svm_" + str(param) + ".xml")
+                    svm.save("opencv_svm.xml")
                     print "Saved"
                     print "TPR %s, FPR %s, Acc %s, PPV %s" % (
                             new_result['TPR']*100,new_result['FPR']*100,
