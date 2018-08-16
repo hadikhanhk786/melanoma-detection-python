@@ -84,6 +84,7 @@ void get_active_contour(Mat img, Mat mGr, int iterations, int init_contour) {
         ac.evolve_to_final_state();
     }
     Lout = &ac.get_Lout();
+    std::cout << "Lout size:" << Lout->size() << std::endl;
 
     // Draw contour formed by points in Lout
     for (ofeli::List::const_Link iterator = Lout->get_begin(); !iterator->end();
@@ -179,7 +180,7 @@ void find_contour_breaks() {
     std::cout << break_points.size() << std::endl;
 }
 
-bool detect_break_diff_axes(Point &pt1, Point &pt2, Point &pt3) {
+bool detect_break_diff_axes(Point &pt1, Point &pt2, Point &pt3, Point &pt4) {
     /********************************************************************************************
     ** This functions handles breaks occuring in two different axes. i.e., each point is on either
     ** on x or y axis. This situtation happens when the object of interest is either too big to fit
@@ -189,6 +190,52 @@ bool detect_break_diff_axes(Point &pt1, Point &pt2, Point &pt3) {
     int diff_x = pt1.x - pt2.x;
     int diff_y = pt1.y - pt2.y;
     int diff = diff_x < diff_y ? diff_x : diff_y;
+	// std::cout << "diffs x" << diff_x << "diffs y" << diff_y << std::endl;
+	// If the break points are on the same axes but on two ends
+	if (abs(diff_y) >= rows - 10 ){
+
+		Point pt = Point(0,0);
+		if (pt1.x > pt2.x){
+			pt = pt1;
+			pt1 = pt2;
+			pt2 = pt;
+		}
+		if (pt1.x > abs(cols - pt2.x)){
+			pt3.x = 1;
+			pt4.x = 1;
+		}
+		else{
+			pt3.x = cols - 1;
+			pt4.x = cols - 1;
+		}
+		pt3.y = pt2.y;
+		pt4.y = pt1.y;
+		axes_break = true;
+		std::cout << "Entered y" << pt1 << pt2 << pt3 << pt4 << std::endl;
+		return axes_break;
+	}
+
+	if (abs(diff_x) >= cols - 10){
+		Point pt = Point(0,0);
+		if (pt1.y > pt2.y){
+			pt = pt1;
+			pt1 = pt2;
+			pt2 = pt;
+		}
+		if (pt1.y > abs(rows - pt2.y)){
+			pt3.y = 1;
+			pt4.y = cols - 1;
+		}
+		else{
+			pt3.y = cols - 1;
+			pt4.y = 1;
+		}
+		pt3.x = pt2.x;
+		pt4.x = pt1.x;
+		axes_break = true;
+		std::cout << "Entered x" << pt1 << pt2 << pt3 << pt4 << std::endl;
+		return axes_break;
+	}
     // If the break points are on the same axes,  return false
     if (diff >= 0 && diff <= 10) {
         axes_break = false;
@@ -220,6 +267,7 @@ void stitch_contour_breaks(Mat contour_image) {
     *********************************************************************************************/
     Point pt, pt1, pt2; // Loop variables
     Point pt3 = Point(0,0); // Initialize pt3 incase breaks happen on different axes
+	Point pt4 = Point(0,0); // Initialize pt3 incase breaks happen on different axes
     int temp_idx;
     // Paired point indexes are stored to avoid each point from forming additional pairs
     std::vector<int> idx_array;
@@ -231,7 +279,7 @@ void stitch_contour_breaks(Mat contour_image) {
         pt1 = break_points[0];
         pt2 = break_points[1];
         // Detect pairs on different axes
-        if (detect_break_diff_axes(pt1, pt2, pt3)) {
+        if (detect_break_diff_axes(pt1, pt2, pt3, pt4)) {
             line(contour_image, pt1, pt3, Scalar(255), 1);
             line(contour_image, pt3, pt2, Scalar(255), 1);
         }
@@ -281,9 +329,16 @@ void stitch_contour_breaks(Mat contour_image) {
             idx_array.push_back(temp_idx);
             std::cout << "pairs formed : " << pt << break_points[temp_idx] << std::endl;
             // Detect pairs on different axes
-            if (detect_break_diff_axes(pt, break_points[temp_idx], pt3)) {
-                line(contour_image, pt, pt3, Scalar(255), 1);
-                line(contour_image, pt3, break_points[temp_idx], Scalar(255), 1);
+            if (detect_break_diff_axes(pt, break_points[temp_idx], pt3, pt4)) {
+				if (pt4.x != 0 && pt4.y != 0){
+					line(contour_image, pt, pt4, Scalar(255), 1);
+					line(contour_image, pt3, break_points[temp_idx], Scalar(255), 1);
+					line(contour_image, pt3, pt4, Scalar(255), 1);
+					pt4 = Point(0,0);
+				}else{
+					line(contour_image, pt, pt3, Scalar(255), 1);
+					line(contour_image, pt3, break_points[temp_idx], Scalar(255), 1);
+				}
             }
             else { // if both the points are on same axes, draw a line between them
                 line(contour_image, pt, break_points[temp_idx], Scalar(255), 1);

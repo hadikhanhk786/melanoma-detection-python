@@ -51,7 +51,7 @@ class Lesion:
                 [50, (0, 0, 255)],
                 [100, (0, 153, 0)],
                 [200, (255, 255, 0)],
-                [400, (255, 0, 0)]
+                [300, (255, 0, 0)]
                 ]
         self.borders = 2
         self.isImageValid = False
@@ -68,8 +68,8 @@ class Lesion:
         self.iter_list = [75, 25]
         self.gaussian_list = [7, 1.0]
         self.energy_list = [2, 1, 1, 1, 1]
-        self.init_width = 0.5
-        self.init_height = 0.5
+        self.init_width = 0.6
+        self.init_height = 0.6
         self.shape = 0 # 0 - ellipse, 1 - rectangle
 
     def check_image(self):
@@ -80,10 +80,11 @@ class Lesion:
             if self.original_image.shape[2] != 3:
                 self.isImageValid = False
                 return
-            # Median blur image
-#            self.image = cv2.medianBlur(self.original_image, 9)
-            # morphologica closing
+            
+            # morphological closing
             self.image = self.original_image.copy()
+            # Median blur image
+            self.image = cv2.medianBlur(self.image, 5)
             # Applying CLAHE to resolve uneven illumination
             hsv = cv2.cvtColor(self.image,cv2.COLOR_BGR2HSV)
             clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8,8))
@@ -146,6 +147,7 @@ class Lesion:
                     self.segmented_img = cv2.bitwise_and(
                             self.original_image,self.original_image,
                             mask=self.contour_mask)
+                    self.segmented_img[self.segmented_img == 0] = 255
                 else:
                     print "No contours found"
         return

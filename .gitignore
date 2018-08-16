@@ -9,3 +9,6 @@ build/
 Images/
 *.xml
 .DS_Store
+*.vcxproj
+*.txt
+*.csv

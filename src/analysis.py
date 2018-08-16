@@ -7,6 +7,7 @@ Created on Mon Mar 13 14:34:52 2017
 
 import pandas as pd
 import numpy as np
+from sklearn.model_selection import train_test_split
 # import ast
 import os
 import json
@@ -20,8 +21,9 @@ import cv2
 
 #iterations = "1"
 #path = r'G:\Upender\complete_mednode_dataset'
-paths = [r'G:\Upender\complete_mednode_dataset',
-         r'G:\Upender\result_set\400_iterations']
+paths = [r'Z:\Upender\result_set\400_iterations']
+#paths = [r'Z:\Upender\complete_mednode_dataset',
+#         r'Z:\Upender\result_set\400_iterations']
 benign_df = pd.DataFrame()
 melanoma_df = pd.DataFrame()
 for PATH in paths:
