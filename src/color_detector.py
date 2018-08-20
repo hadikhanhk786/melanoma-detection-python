@@ -1,13 +1,17 @@
 # -*- coding: utf-8 -*-
 """
+GUI program to identify the color using HSV track bars.
+
 Created on Tue Mar 07 11:25:21 2017
 
 @author: ukalwa
 """
+# Built-in imports
+import os
 
+# third-party imports
 import cv2
 import numpy as np
-import os
 
 
 # optional argument
@@ -16,15 +20,24 @@ def nothing(x):
 
 
 def onmouse(event, x, y, flags, params):
+    """
+    Handler method to capture mouse events and store (x,y) coordinates.
+
+    :param event: cv2 events such as EVENT_LBUTTONDOWN etc.,
+    :param x: x coordinate of the mouse
+    :param y: y coordinate of the mouse
+    :param flags: Any
+    :param params: Any
+    """
     global point, hsv
     if event == cv2.EVENT_LBUTTONDOWN:
         point = [x, y]
         print x, y, hsv[x, y]
 
 
-PATH = r'G:\Upender\Melanoma Project\PH2Dataset\MoleDetection'
+PATH = '../Images'
 point = []
-filename = r'IMD050_cropped'
+filename = r'IMD002'
 img = cv2.imread(os.path.join(PATH, filename + '.jpg'))
 mask2 = cv2.imread(os.path.join(PATH, filename + '_mask.PNG'), 0)
 hsv2 = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
@@ -54,11 +67,8 @@ cv2.createTrackbar(sh, 'image', 255, 255, nothing)
 cv2.createTrackbar(vl, 'image', 125, 255, nothing)
 cv2.createTrackbar(vh, 'image', 215, 255, nothing)
 
-while 1:
-    #    _,frame=cap.read()
+while True:
     frame = cv2.bitwise_and(img, img, mask=mask2)
-    #    frame = img_list[261].copy()
-    #    frame=cv2.medianBlur(frame,3)
     # convert to HSV from BGR
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 

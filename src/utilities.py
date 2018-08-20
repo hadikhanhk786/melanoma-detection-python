@@ -4,6 +4,7 @@ Created on Tue Jun 06 11:37:30 2017
 
 @author: ukalwa
 """
+# third-party imports
 import numpy as np
 from scipy.interpolate import splprep, splev
 import cv2
@@ -13,9 +14,9 @@ def sq_dist_two_vectors(p, q):
     if len(p.shape) == 1 and len(q.shape) == 1:
         return np.square(p[0] - q[0]) + np.square(p[1] - q[1])
     elif len(p.shape) == 1:
-        return np.square(p[0] - q[:,0]) + np.square(p[1] - q[:,1])
+        return np.square(p[0] - q[:, 0]) + np.square(p[1] - q[:, 1])
     elif len(q.shape) == 1:
-        return np.square(p[:,0] - q[0]) + np.square(p[:,1] - q[1])
+        return np.square(p[:, 0] - q[0]) + np.square(p[:, 1] - q[1])
     else:
         return np.square(p[:, 0] - q[:, 0]) + np.square(p[:, 1] - q[:, 1])
 
@@ -35,8 +36,8 @@ def menger_curve_array(a, b, c):
     #    b = b[:-2,:]
     #    c = c[:-2,:]
     curvature_top = 2 * (
-        np.multiply(a[:, 0] - b[:, 0], c[:, 1] - b[:, 1]) - np.multiply(
-            c[:, 0] - b[:, 0], a[:, 1] - b[:, 1]))
+            np.multiply(a[:, 0] - b[:, 0], c[:, 1] - b[:, 1])
+            - np.multiply(c[:, 0] - b[:, 0], a[:, 1] - b[:, 1]))
     curvature_bottom = np.sqrt(
         np.multiply(sq_dist_two_vectors(a, b), sq_dist_two_vectors(b, c),
                     sq_dist_two_vectors(c, a)))
@@ -64,6 +65,7 @@ def smooth_boundary(boundary):
 
 def draw_closing_lines(img, contours):
     pts = []
+    rows, cols = None, None
     for cont in contours:
         v1 = (np.roll(cont, -2, axis=0) - cont)
         v2 = (np.roll(cont, 2, axis=0) - cont)
@@ -74,13 +76,13 @@ def draw_closing_lines(img, contours):
         cosinus = (dotprod / norm1) / norm2
         cosinus[np.isnan(cosinus)] = 0
         indexes = np.where(0.90 < cosinus)[0]
-        rows,cols = img.shape[:2]
+        rows, cols = img.shape[:2]
         if len(indexes) == 0:
             continue
         print "Found possible breaks at : %s locations" % len(indexes)
-        print "Points are : ", cont[indexes,0]
+        print "Points are : ", cont[indexes, 0]
         for i in xrange(len(indexes)):
-            pt = cont[indexes[i],0]
+            pt = cont[indexes[i], 0]
             if 0 <= pt[0] < 10 or 0 <= cols - pt[0] <= 10:
                 pts.append(tuple(pt))
             elif 0 <= pt[1] < 10 or 0 <= rows - pt[1] <= 10:
@@ -93,13 +95,13 @@ def draw_closing_lines(img, contours):
         return
     elif len(pts) == 2:
         # two u-turns found, draw the closing line
-        diff = np.diff(pts,axis=0)
+        diff = np.diff(pts, axis=0)
         if 0 <= np.min(diff) <= 10:
             cv2.line(img, pts[0], pts[1], (255, 255, 255))
         else:
             # condition where end points are on different axes
             # Add additional point to close the contour smoothly
-            pt3=[]
+            pt3 = []
             if 0 <= pts[0][0] < 10 or 0 <= cols - pts[0][0] < 10:
                 pt3.append(pts[0][0])
             else:
@@ -113,7 +115,7 @@ def draw_closing_lines(img, contours):
     elif len(pts) > 2:
         print "Manual check required"
         paired_pts = []
-#        pts = sorted(pts)
+        #        pts = sorted(pts)
         for pt in pts:
             if pt not in paired_pts:
                 temp_pts = list(set(pts) - set(paired_pts))
@@ -124,13 +126,14 @@ def draw_closing_lines(img, contours):
                 pt2 = temp_pts[pos]
                 paired_pts.append(pt)
                 paired_pts.append(pt2)
-                print "pairs formed:", pt,pt2
+                print "pairs formed:", pt, pt2
                 cv2.line(img, pt, pt2, (255, 255, 255))
+
 
 def extract_largest_contour(gray_image):
     im_mask, mask_contours, hierarchy = \
-                cv2.findContours(gray_image, cv2.RETR_EXTERNAL,
-                                 cv2.CHAIN_APPROX_NONE)
+        cv2.findContours(gray_image, cv2.RETR_EXTERNAL,
+                         cv2.CHAIN_APPROX_NONE)
     cnt = len(mask_contours)
     if cnt > 0:
         area = np.zeros(cnt)

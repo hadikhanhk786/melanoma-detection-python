@@ -1,19 +1,17 @@
 
 import os
+import sys
 os.system("scons")
 
 import cv2
 
 import active_contour
 
-#import numpy as np
-#import matplotlib.pyplot as plt
 
-# img = cv2.imread("Images/IMD036_cropped.jpg")
-
-img = cv2.imread(r"Z:\Upender\Melanoma Project\PH2Dataset\Images\IMD035_cropped.jpg")
+img = cv2.imread(r"Z:\PH2Dataset\Images\IMD035_cropped.jpg")
 if img is None:
     print("Image file not found or unable to read")
+    sys.exit()
 img = cv2.GaussianBlur(img, (11,11),0)
 iter_list = [50, 25]
 gaussian_list = [7, 1.0]
