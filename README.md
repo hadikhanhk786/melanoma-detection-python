@@ -9,34 +9,54 @@ Requirments
 
 *Environment Setup*
 
--   Download & Install [OpenCV 3.2.0]
--   Download & Install [Python 2.7]
--   Using pip install [numpy]
--   Copy cv2.pyd file from \[OPENCV\_LOCATION\]/build/python/2.7/\[x64
-    or x86\]/ to \[PYTHON\_LOCATION\]/Lib/site\_packages/
+-   Download & Install [Python] using [Anaconda] or [Miniconda] 
+(**Recommended**)
 
-It was tested on Windows and Mac OS X.
+Then you can run the following commands install required packages
+```bash
+conda install -y opencv=3.2 numpy scikit-learn scipy scons -c conda-forge
+```
+*It is compatible with both Python 2.7 and tested on Windows and Mac OS X.*
 
 Usage
 =====
+Clone this repository and change directory
+```bash
+git clone https://github.com/ukalwa/melanoma_project_python
+cd melanoma_project_python
+```
 
-Run `python src/run_script.py [--file <filename> | --dir <dirname>]`
-
+The usage of the program is as mentioned below
+```bash
+python run_script.py [--file <filename> | --dir <dirname>]
+```
 Steps involved
 ==============
 
-The code performs following steps
+The code performs following steps:
 
--   Reads in dermoscopic lesion image specified by --file or a directory name specified by --dir
--   If directory name is mentioned, the code checks the validity of path and loops through the ".jpg" files present in the directory
--   Checks the validity of the image
--   Get the mask by calling active_contour library (in C++) with number of iterations
--   Segment the lesion from the dermoscopic image using mask
--   Calculate ABCD (<i>Asymmetry, Border irregularity, number of Colors, Diameter</i>) features of the lesion
--   Classify them using classifier (In progress)
--   Save the processed images and results
+1. Reads in dermoscopic lesion image specified by --file or a directory name specified by --dir
+2. Preprocess the image by applying color transformation and filtering
+3. Segment the lesion from the image using active contour model
+4. Extract features (<i>Asymmetry, Border irregularity, Colors, Diameter</i>) from the lesion
+5. Classify the lesion based on the features extracted using an SVM classifier and output the result.
+6. Save the processed images and results
 
+Documentation
+==============
 
+For generating documentation, please follow these steps:
+* Make sure you have sphinx installed, you can install it like this
+```bash
+pip install sphinx sphinx_rtd_theme
+```
+* Move to the docs directory and run make. It takes couple of minutes to \
+generate the build files.
+```bash
+cd docs
+make html
+explorer build\html\index.html
+```
 
 License
 =======
@@ -49,6 +69,9 @@ Contributing
 If you have any suggestions or identified bugs please feel free to post
 them!
 
-  [OpenCV 3.2.0]: http://opencv.org/downloads.html
-  [Python 2.7]: https://www.python.org/downloads/
+  [OpenCV 3.1.0]: http://opencv.org/downloads.html
+  [Python]: https://www.python.org/downloads/
   [numpy]: https://www.scipy.org/scipylib/download.html
+  [matplotlib]: https://matplotlib.org/
+  [Anaconda]: https://www.anaconda.com/download/
+  [Miniconda]: https://conda.io/miniconda.html

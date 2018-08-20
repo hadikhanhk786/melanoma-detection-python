@@ -12,7 +12,7 @@ import cv2
 from utilities import extract_largest_contour
 
 # Initialize directory locations of different results
-DIR = r"G:\Upender\result_set"
+DIR = input("Enter the location of data")
 
 # Array to store results
 comparison_results = []
