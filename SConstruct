@@ -6,7 +6,7 @@ if platform.system() == "Windows":
     BOOST_ROOT=os.environ.get('BOOST_ROOT') # 64-bit binaries (boost_1.62.0) downloaded from https://boost.teeks99.com
     BOOST_LIBDIR=BOOST_ROOT + r"\lib64-msvc-14.0"
     # Make sure both python and boost binaries are either x64 or x86 and accordingly update path to opencv binaries
-    OPENCV_DIR=os.environ.get('OPENCV2410')
+    OPENCV_DIR=os.environ.get('OPENCV_DIR')
     OPENCV_VER="2410"
 def TOOL_BOOST_DISTUTILS(env):
     """Add stuff needed to build Python extensions with boost.  """
