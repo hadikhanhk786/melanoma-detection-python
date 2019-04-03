@@ -53,24 +53,6 @@ The code performs following steps:
 5. Classify the lesion based on the features extracted using an SVM classifier and output the result.
 6. Save the processed images and results
 
-## Documentation
-
-For generating documentation, please follow these steps:
-
-- Make sure you have sphinx installed, you can install it like this
-
-```bash
-pip install sphinx sphinx_rtd_theme
-```
-
-- Move to the docs directory and run make. It takes couple of minutes to generate the build files.
-
-```bash
-cd docs
-make html
-explorer build\html\index.html
-```
-
 ## Troubleshooting
 
 - If you face any vcvarsall.bat errors, try installing visual studio 2017 community edition.
