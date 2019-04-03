@@ -1,6 +1,8 @@
 # Melanoma detection
 
-This application reads dermoscopic lesion images and classfies them as melanoma or benign.
+This application is developed as a part of our manuscript titled *"Skin cancer diagnostics with an all-inclusive smartphone application"*. It is submitted and under review.
+
+The application reads dermoscopic lesion images and classfies them as melanoma or benign.
 It is developed using OpenCV 3.2.0 and Python 2.7
 
 ## Environment Setup
