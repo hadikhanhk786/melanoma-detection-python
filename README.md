@@ -26,7 +26,7 @@ It is developed using OpenCV 3.2.0 and Python 2.7
 
 - Install prerequisites for active contour (C++) module (Windows)
   
-  - Download and extract boost-python 1.62.0 either from official website or unofficial prebuilt [binaries] and set an environment variable (BOOST_DIR) pointing to the root of the extracted folder.
+  - Download and extract boost-libraries which includes boost-python either from official website or unofficial prebuilt [binaries] (1.62 msvc-14 64bit) and set an environment variable (BOOST_DIR) pointing to the root of the extracted folder.
 
   - Download and extract [OpenCV 2.4.10] libraries and set an environment variable (OPENCV_DIR) pointing to `{folder path}\build\x64\vc12`.
 
@@ -92,5 +92,5 @@ them!
   [matplotlib]: https://matplotlib.org/
   [Anaconda]: https://www.anaconda.com/download/
   [Miniconda]: https://conda.io/miniconda.html
-  [binaries]: http://boost.teeks99.com
+  [binaries]: http://boost.teeks99.com/bin/1.62.0/
   [OpenCV 2.4.10]: https://sourceforge.net/projects/opencvlibrary/files/opencv-win/2.4.10/opencv-2.4.10.exe/download
